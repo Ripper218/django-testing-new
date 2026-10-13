@@ -1,53 +1,47 @@
 from http import HTTPStatus
 
-from django.urls import reverse
+from django.conf import settings
 
 from news.forms import CommentForm
 
-from .constants import NEWS_ON_PAGE
+
+def test_news_count_on_page_is_limited(more_news, author_client, home_url):
+    response = author_client.get(home_url)
+
+    assert len(
+        response.context['object_list']
+    ) == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
-def test_news_count_on_page_is_limited(
-    more_news,
-    author_client,
-):
-    response = author_client.get(reverse('news:home'))
-    object_list = response.context['object_list']
+def test_news_are_sorted_newest_first(more_news, author_client, home_url):
+    response = author_client.get(home_url)
 
-    assert len(object_list) == NEWS_ON_PAGE
+    news_dates = [item.date for item in response.context['object_list']]
 
-
-def test_news_are_sorted_newest_first(more_news, author_client):
-    response = author_client.get(reverse('news:home'))
-
-    object_list = list(response.context['object_list'])
-    expected_notes = list(more_news)[:NEWS_ON_PAGE]
-
-    assert object_list == expected_notes
+    assert news_dates == sorted(news_dates, reverse=True)
 
 
 def test_comments_are_sorted_oldest_first(
     several_comments, author_client, detail_url,
 ):
     response = author_client.get(detail_url)
-    comments = list(response.context['news'].comment_set.all())
-    expected_comments = list(several_comments)
 
-    assert comments == expected_comments
+    created = [
+        comment.created
+        for comment in response.context['news'].comment_set.all()
+    ]
+
+    assert created == sorted(created)
 
 
-def test_comment_form_not_passed_to_anonymous(client, news):
-    url = reverse('news:detail', args=(news.pk,))
-
-    response = client.get(url)
+def test_comment_form_not_passed_to_anonymous(client, news, detail_url):
+    response = client.get(detail_url)
 
     assert 'form' not in response.context
 
 
-def test_comment_form_passed_to_author(author_client, news):
-    url = reverse('news:detail', args=(news.pk,))
-
-    response = author_client.get(url)
+def test_comment_form_passed_to_author(author_client, news, detail_url):
+    response = author_client.get(detail_url)
 
     assert response.status_code == HTTPStatus.OK
     assert 'form' in response.context

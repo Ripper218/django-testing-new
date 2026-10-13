@@ -1,2 +1,0 @@
-NEWS_ON_PAGE = 10
-WARNING_COMMENT_TEXT = 'Не ругайтесь!'

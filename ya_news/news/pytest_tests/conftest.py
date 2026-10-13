@@ -1,12 +1,12 @@
 from datetime import date, timedelta
+
 import pytest
+from django.conf import settings
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
 from news.models import Comment, News
-
-from .constants import NEWS_ON_PAGE
 
 
 @pytest.fixture
@@ -43,14 +43,13 @@ def news(db):
 
 @pytest.fixture
 def more_news(db):
-    today = date.today()
     return News.objects.bulk_create(
         News(
             title=f'Новость {index}',
             text='Текст тестовой новости',
-            date=today - timedelta(days=index),
+            date=date.today() - timedelta(days=index),
         )
-        for index in range(NEWS_ON_PAGE + 1)
+        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     )
 
 
@@ -65,7 +64,6 @@ def comment(news, author, db):
 
 @pytest.fixture
 def several_comments(news, author, db):
-
     comments = Comment.objects.bulk_create(
         Comment(
             news=news,
@@ -74,14 +72,43 @@ def several_comments(news, author, db):
         )
         for index in range(3)
     )
+
     base_time = timezone.now()
     for index, item in enumerate(comments):
-        Comment.objects.filter(pk=item.pk).update(
-            created=base_time + timedelta(minutes=index)
-        )
-    return list(Comment.objects.order_by('created'))
+        item.created = base_time + timedelta(minutes=index)
+        item.save(update_fields=['created'])
+
+
+@pytest.fixture
+def home_url():
+    return reverse('news:home')
+
+
+@pytest.fixture
+def login_url():
+    return reverse('users:login')
+
+
+@pytest.fixture
+def logout_url():
+    return reverse('users:logout')
+
+
+@pytest.fixture
+def signup_url():
+    return reverse('users:signup')
 
 
 @pytest.fixture
 def detail_url(news):
-    return reverse('news:detail', args=[news.pk])
+    return reverse('news:detail', args=(news.pk,))
+
+
+@pytest.fixture
+def edit_url(comment):
+    return reverse('news:edit', args=(comment.pk,))
+
+
+@pytest.fixture
+def delete_url(comment):
+    return reverse('news:delete', args=(comment.pk,))
