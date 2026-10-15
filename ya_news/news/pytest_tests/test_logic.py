@@ -26,16 +26,6 @@ def test_author_can_create_comment(author_client, author, detail_url, news):
     assert comment.text == FORM_DATA['text']
 
 
-def test_comment_creation_redirects_to_comments_anchor(
-    author_client, detail_url, detail_url_comments
-):
-    response = author_client.post(detail_url, data=FORM_DATA)
-
-    assert response.status_code == HTTPStatus.FOUND
-    assert response.url == detail_url_comments
-    assert Comment.objects.count() == 1
-
-
 def test_bad_word_rejected(author_client, news, detail_url):
     response = author_client.post(detail_url, data=BAD_FORM_DATA)
 

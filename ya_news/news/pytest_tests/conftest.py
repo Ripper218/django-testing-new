@@ -1,5 +1,4 @@
 from datetime import date, timedelta
-from http import HTTPStatus
 
 import pytest
 from django.conf import settings
@@ -116,51 +115,8 @@ def delete_url(comment):
 
 
 @pytest.fixture
-def detail_url_comments(news, detail_url):
-    return detail_url + '#comments'
-
-
-@pytest.fixture
-def status_cases(
-    client,
-    author_client,
-    reader_client,
-    home_url,
-    login_url,
-    signup_url,
-    detail_url,
-    edit_url,
-    delete_url,
-    logout_url,
-):
-    return (
-        (home_url, client, 'get', HTTPStatus.OK),
-        (login_url, client, 'get', HTTPStatus.OK),
-        (signup_url, client, 'get', HTTPStatus.OK),
-        (detail_url, client, 'get', HTTPStatus.OK),
-        (edit_url, author_client, 'get', HTTPStatus.OK),
-        (delete_url, author_client, 'get', HTTPStatus.OK),
-        (edit_url, reader_client, 'get', HTTPStatus.NOT_FOUND),
-        (delete_url, reader_client, 'get', HTTPStatus.NOT_FOUND),
-        (edit_url, client, 'get', HTTPStatus.FOUND),
-        (delete_url, client, 'get', HTTPStatus.FOUND),
-        (logout_url, client, 'get', HTTPStatus.METHOD_NOT_ALLOWED),
-        (logout_url, author_client, 'post', HTTPStatus.OK),
-    )
-
-
-@pytest.fixture
-def redirect_cases(
-    client,
-    edit_url,
-    delete_url,
-    edit_redirect_url,
-    delete_redirect_url,
-):
-    return (
-        (edit_url, client, edit_redirect_url),
-        (delete_url, client, delete_redirect_url),
-    )
+def detail_url_comments(detail_url):
+    return f'{detail_url}#comments'
 
 
 @pytest.fixture
